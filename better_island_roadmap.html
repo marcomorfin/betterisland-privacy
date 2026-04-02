@@ -1,0 +1,125 @@
+
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font-sans); }
+.wrap { padding: 1rem 0; }
+.filters { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 1.5rem; }
+.f-btn { padding: 5px 12px; border: 0.5px solid var(--color-border-secondary); border-radius: 20px; font-size: 12px; cursor: pointer; background: transparent; color: var(--color-text-secondary); }
+.f-btn.on { background: var(--color-background-info); color: var(--color-text-info); border-color: var(--color-border-info); font-weight: 500; }
+.wave-label { font-size: 11px; font-weight: 500; color: var(--color-text-tertiary); letter-spacing: 0.06em; text-transform: uppercase; margin: 1.5rem 0 0.75rem; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px; }
+.card { background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); padding: 1rem 1.1rem; cursor: pointer; transition: border-color 0.15s; }
+.card:hover { border-color: var(--color-border-secondary); }
+.card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
+.card-name { font-size: 14px; font-weight: 500; color: var(--color-text-primary); line-height: 1.4; }
+.card-sub { font-size: 12px; color: var(--color-text-secondary); line-height: 1.5; }
+.badge { font-size: 10px; padding: 2px 7px; border-radius: 10px; white-space: nowrap; flex-shrink: 0; font-weight: 500; }
+.easy { background: #EAF3DE; color: #27500A; }
+.mid { background: #FAEEDA; color: #633806; }
+.hard { background: #FCEBEB; color: #791F1F; }
+.cat-tag { font-size: 10px; color: var(--color-text-tertiary); margin-top: 6px; }
+.done-badge { font-size: 10px; padding: 2px 7px; border-radius: 10px; background: var(--color-background-success); color: var(--color-text-success); font-weight: 500; }
+.stat-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 1.5rem; }
+.stat { background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 0.75rem; text-align: center; }
+.stat-n { font-size: 22px; font-weight: 500; color: var(--color-text-primary); }
+.stat-l { font-size: 11px; color: var(--color-text-secondary); margin-top: 2px; }
+.ask-row { display: flex; gap: 8px; margin-top: 1.5rem; flex-wrap: wrap; }
+.ask-btn { padding: 8px 14px; border: 0.5px solid var(--color-border-secondary); border-radius: var(--border-radius-md); font-size: 12px; cursor: pointer; background: transparent; color: var(--color-text-secondary); }
+.ask-btn:hover { background: var(--color-background-secondary); }
+</style>
+
+<div class="wrap">
+  <div class="stat-row" id="stats"></div>
+  <div class="filters" id="filters"></div>
+  <div id="list"></div>
+  <div class="ask-row">
+    <button class="ask-btn" onclick="sendPrompt('Давай начнём кодить первую фичу из волны 1 — с самой лёгкой. Покажи с чего начать в Xcode ↗')">Начать кодить волну 1 ↗</button>
+    <button class="ask-btn" onclick="sendPrompt('Какая архитектура нужна для всего проекта Better Island? Как организовать файлы в Xcode ↗')">Архитектура проекта ↗</button>
+  </div>
+</div>
+
+<script>
+const features = [
+  { name: "Таймер Помодоро", sub: "Live Activity — таймер с кольцом прогресса в острове", cat: "продуктивность", diff: "easy", wave: 1 },
+  { name: "Метроном", sub: "Анимированный пульс в острове, BPM слайдер", cat: "музыка", diff: "easy", wave: 1 },
+  { name: "2FA генератор", sub: "TOTP одноразовые коды прямо в острове", cat: "безопасность", diff: "easy", wave: 1 },
+  { name: "Парковочный таймер", sub: "Обратный отсчёт с напоминанием, геолокация", cat: "транспорт", diff: "easy", wave: 1 },
+  { name: "Трекер воды / калорий", sub: "Быстрое добавление из острова одним тапом", cat: "здоровье", diff: "easy", wave: 1 },
+  { name: "Напоминание таблетки", sub: "Расписание + отметка принято прямо из острова", cat: "здоровье", diff: "easy", wave: 1 },
+  { name: "Сплит счёта", sub: "Ввёл сумму → остров показал сколько каждый должен", cat: "финансы", diff: "easy", wave: 1 },
+  { name: "Гипер-локальная погода", sub: "GPS точка, обновление каждые 10 минут", cat: "погода", diff: "easy", wave: 1 },
+  { name: "Курсы валют / крипта", sub: "Live котировки в острове, настраиваемые пары", cat: "финансы", diff: "easy", wave: 1 },
+  { name: "Таймер фото/видео", sub: "Обратный отсчёт в острове пока снимаешь", cat: "камера", diff: "easy", wave: 1 },
+
+  { name: "Скачивание видео", sub: "Share Extension → сервер → прогресс в острове (TikTok, IG, YT)", cat: "медиа", diff: "mid", wave: 2 },
+  { name: "Конвертер форматов", sub: "Видео/фото конвертация, прогресс в острове", cat: "медиа", diff: "mid", wave: 2 },
+  { name: "Умный буфер обмена", sub: "История копирований, быстрая вставка из острова", cat: "продуктивность", diff: "mid", wave: 2 },
+  { name: "Переводчик текста", sub: "Скопировал → остров показал перевод", cat: "продуктивность", diff: "mid", wave: 2 },
+  { name: "Переводчик речи", sub: "Говоришь → остров показывает перевод в реальном времени", cat: "продуктивность", diff: "mid", wave: 2 },
+  { name: "Диктофон с транскрипцией", sub: "Speech framework → текст в реальном времени в острове", cat: "голос", diff: "mid", wave: 2 },
+  { name: "Распознавание песни", sub: "ShazamKit → результат всплывает в острове", cat: "музыка", diff: "mid", wave: 2 },
+  { name: "Конвертер валют", sub: "Выделил цену в любом приложении → остров показал в твоей валюте", cat: "финансы", diff: "mid", wave: 2 },
+  { name: "Сканер QR", sub: "Быстрый запуск камеры из острова", cat: "камера", diff: "mid", wave: 2 },
+  { name: "Сканер чека", sub: "Vision OCR → распознал сумму → добавил в бюджет", cat: "финансы", diff: "mid", wave: 2 },
+  { name: "Трекер доставки", sub: "Парсинг статуса посылки → живые обновления в острове", cat: "транспорт", diff: "mid", wave: 2 },
+  { name: "Флеш-карточки", sub: "Листаешь карточки прямо из острова без открытия приложения", cat: "учёба", diff: "mid", wave: 2 },
+  { name: "Быстрые заметки голосом", sub: "Сказал → сохранилось, транскрипция через Whisper", cat: "голос", diff: "mid", wave: 2 },
+  { name: "Телесуфлёр", sub: "Скрипт скроллится в острове пока камера пишет", cat: "камера", diff: "mid", wave: 2 },
+  { name: "Трекер тренировки", sub: "Упражнение, подходы, вес — управление из острова", cat: "здоровье", diff: "mid", wave: 2 },
+  { name: "Шагомер", sub: "CoreMotion → прогресс к цели в острове", cat: "здоровье", diff: "mid", wave: 2 },
+
+  { name: "Караоке под музыку", sub: "MediaPlayer + MusicKit → текст синхронизирован с треком", cat: "музыка", diff: "hard", wave: 3 },
+  { name: "Заряд AirPods / Watch", sub: "CoreBluetooth → уровень заряда в острове в реальном времени", cat: "устройства", diff: "hard", wave: 3 },
+  { name: "Транскрипция голосовых TG", sub: "Share Extension → Whisper API → текст в острове", cat: "голос", diff: "hard", wave: 3 },
+  { name: "Быстрый ответ из острова", sub: "UserNotifications + клавиатура → ответ без открытия мессенджера", cat: "уведомления", diff: "hard", wave: 3 },
+  { name: "Скрытый режим", sub: "ARKit / Face tracking → скрывает контент когда кто-то смотрит", cat: "безопасность", diff: "hard", wave: 3 },
+  { name: "Пульсометр Watch", sub: "HealthKit + WatchConnectivity → пульс в острове", cat: "здоровье", diff: "hard", wave: 3 },
+  { name: "Трекер рейса", sub: "Flight API → gate, задержка, статус в острове", cat: "транспорт", diff: "hard", wave: 3 },
+  { name: "Следующий транспорт", sub: "Transit API → реальное время прибытия автобуса/метро", cat: "транспорт", diff: "hard", wave: 3 },
+  { name: "Умный дом (HomeKit)", sub: "Лампы, термостат, домофон — управление из острова", cat: "умный дом", diff: "hard", wave: 3 },
+];
+
+const waves = [
+  { id: 1, label: "Волна 1 — запуск", desc: "Лёгкие фичи, чистый Swift, никаких серверов" },
+  { id: 2, label: "Волна 2 — обновление", desc: "Share Extensions, API, AI frameworks" },
+  { id: 3, label: "Волна 3 — продвинутое", desc: "Bluetooth, HealthKit, сторонние сервисы" },
+];
+
+const cats = [...new Set(features.map(f => f.cat))].sort();
+let activeFilter = "all";
+
+function render() {
+  const stats = document.getElementById("stats");
+  const easy = features.filter(f => f.diff === "easy").length;
+  const mid = features.filter(f => f.diff === "mid").length;
+  const hard = features.filter(f => f.diff === "hard").length;
+  stats.innerHTML = `
+    <div class="stat"><div class="stat-n">${easy}</div><div class="stat-l">лёгких</div></div>
+    <div class="stat"><div class="stat-n">${mid}</div><div class="stat-l">средних</div></div>
+    <div class="stat"><div class="stat-n">${hard}</div><div class="stat-l">сложных</div></div>
+  `;
+
+  const filters = document.getElementById("filters");
+  filters.innerHTML = `<button class="f-btn ${activeFilter === 'all' ? 'on' : ''}" onclick="setFilter('all')">Все</button>` +
+    cats.map(c => `<button class="f-btn ${activeFilter === c ? 'on' : ''}" onclick="setFilter('${c}')">${c}</button>`).join("");
+
+  const list = document.getElementById("list");
+  list.innerHTML = waves.map(w => {
+    const items = features.filter(f => f.wave === w.id && (activeFilter === "all" || f.cat === activeFilter));
+    if (!items.length) return "";
+    return `<div class="wave-label">${w.label} · ${w.desc}</div>
+    <div class="grid">${items.map(f => `
+      <div class="card" onclick="sendPrompt('Объясни как реализовать «${f.name}» в Better Island. Я новичок, покажи пошагово с кодом на Swift ↗')">
+        <div class="card-top">
+          <div class="card-name">${f.name}</div>
+          <span class="badge ${f.diff}">${f.diff === 'easy' ? 'легко' : f.diff === 'mid' ? 'средне' : 'сложно'}</span>
+        </div>
+        <div class="card-sub">${f.sub}</div>
+        <div class="cat-tag">${f.cat}</div>
+      </div>`).join("")}</div>`;
+  }).join("");
+}
+
+function setFilter(f) { activeFilter = f; render(); }
+render();
+</script>
